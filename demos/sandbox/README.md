@@ -90,10 +90,40 @@ sandbox> cat test.txt
 
 Type `exit` to leave. This will automatically trigger the suspension of the actor.
 
-To permanently delete the suspended actor, then the now-empty atespace:
+## How to Run the Multiplexing Demo
+
+Before running the demo, ensure the sandbox demo is deployed:
 ```bash
-kubectl ate delete actor my-sandbox-1 -a demo
-kubectl ate delete atespace demo
+./hack/install-ate.sh --deploy-demo-sandbox
+```
+
+Then run the automated multiplexing script:
+```bash
+./demos/sandbox/run_multiplex_demo.sh
+```
+
+Alternatively, you can run the demo inside a split-pane `tmux` session to watch the state transitions and pod stability in real time:
+```bash
+./demos/sandbox/run_tmux_demo.sh
+```
+This splits your terminal:
+- **Left Panel**: Runs the automated multiplexing client.
+- **Top Right Panel**: Watches Kubernetes pods in the sandbox namespace.
+- **Bottom Right Panel**: Watches active worker assignments on Substrate.
+
+
+This automated demo script will:
+1. Port-forward the API and router services.
+2. Query the initial state of the worker pods (showing 200 replicas).
+3. Create 1000 sandbox actors (`sandbox-1` through `sandbox-1000`).
+4. Sequentially write a unique state file containing a specific string (e.g., `state-value-for-actor-i`) to each of the 1000 actors, suspending each actor immediately after writing.
+5. Sequentially read back the state file from each actor to verify that its unique state was preserved across the suspend/resume cycles.
+6. Print the state of the worker pods after the demonstration, proving that they did not restart or churn during the process.
+
+If you need to manually clean up and delete all actors in the `sandbox-multiplex` atespace (e.g., if a run failed halfway or you want to reset), run:
+
+```bash
+./demos/sandbox/cleanup_multiplex_demo.sh
 ```
 
 ## How to Uninstall
